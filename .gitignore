@@ -1,0 +1,32 @@
+# Local history, credentials, trusted hosts and connection settings
+/data/
+**/monitor.db*
+**/connection.json
+**/settings.json
+**/known_hosts
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+*token-file*
+
+# Python and build outputs
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+release/
+*.spec
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

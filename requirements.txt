@@ -1,0 +1,8 @@
+# Runtime versions used by v1.2.0. Python 3.12 x64 is the tested platform.
+paramiko==5.1.0
+cryptography==50.0.2
+bcrypt==5.0.0
+PyNaCl==1.6.2
+cffi==2.1.1
+pycparser==3.12
+invoke==3.0.3
