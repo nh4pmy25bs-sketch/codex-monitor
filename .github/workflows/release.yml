@@ -1,0 +1,50 @@
+name: Windows release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - name: Validate release tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          $version = python -c "from core import VERSION; print(VERSION)"
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag does not match core.VERSION' }
+      - run: python -m pip install --disable-pip-version-check -r requirements-build.txt
+      - name: Test and build
+        shell: pwsh
+        run: ./build.ps1 -Python python
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: CodexMonitor-release-assets
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+      - name: Create draft release for maintainer review
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: pwsh
+        run: |
+          $version = python -c "from core import VERSION; print(VERSION)"
+          $notes = "docs/RELEASE_NOTES_v$version.md"
+          if (!(Test-Path -LiteralPath $notes)) { throw 'Missing release notes' }
+          $assets = Get-ChildItem -LiteralPath release -File | ForEach-Object { $_.FullName }
+          gh release create $env:GITHUB_REF_NAME @assets --verify-tag --draft --title "Codex Monitor v$version" --notes-file $notes
+          if ($LASTEXITCODE -ne 0) { throw 'Draft release creation failed' }
